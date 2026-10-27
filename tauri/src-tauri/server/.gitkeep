@@ -1,0 +1,4 @@
+# Сюда CI и packaging/build_tauri.bat копируют сервер (dist/Cutline) —
+# он попадает в установщик Tauri через bundle.resources.
+# Папка должна существовать даже пустой, иначе сборка падает:
+#   resource path `server` doesn't exist

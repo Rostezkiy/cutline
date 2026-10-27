@@ -61,6 +61,9 @@ goto :error
 
 :installer
 pushd tauri\src-tauri
+rem Установщик несёт в себе сервер: bundle.resources забирает его из папки server
+if exist "server" rmdir /s /q "server"
+xcopy /e /i /q /y "..\..\dist\Cutline" "server" >nul
 rem npx - это .cmd-шим: без call управление не вернётся в этот скрипт
 call %TAURI% build
 if errorlevel 1 goto :error_popd

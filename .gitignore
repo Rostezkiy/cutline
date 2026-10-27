@@ -13,6 +13,9 @@ __pycache__/
 .dirac-cache/
 *.pyc
 /dist/
+/tauri/src-tauri/server/*
+!/tauri/src-tauri/server/.gitkeep
+/tauri/src-tauri/tauri.version.json
 /tauri/src-tauri/target/
 /build/
 /*.spec

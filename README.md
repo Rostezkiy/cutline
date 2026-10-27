@@ -18,7 +18,8 @@
 
 ### Windows — установщик (рекомендуется)
 
-1. Скачайте `Cutline-Setup-*.exe` со страницы [Releases](../../releases) и запустите.
+1. Скачайте `Cutline-Desktop-Setup-*.exe` со страницы [Releases](../../releases) и запустите.
+   Установщик уже содержит сервер, отдельно ничего качать не нужно.
 2. Запустите **Cutline**. При первом старте откроется мастер настройки.
 3. Нажмите «Скачать» у FFmpeg, модели распознавания речи и LLM — всё скачается само.
 
@@ -78,12 +79,12 @@ python -m unittest discover -s tests -v
 packaging\build_windows.bat      # PyInstaller onedir  -> dist\Cutline\Cutline.exe
 packaging\build_tauri.bat        # оболочка Tauri      -> dist\Cutline-Desktop-Setup-*.exe
 packaging\make_portable.py       # portable ZIP        -> dist\Cutline-portable-*.zip
-iscc packaging\cutline.iss       # полный установщик   -> dist\Cutline-Setup.exe
+iscc packaging\cutline.iss       # альтернативный установщик -> dist\Cutline-Setup.exe
 ```
 
 Релиз собирается автоматически на тег `v*`: в GitHub Releases попадают переносимый архив
 `Cutline-portable-<версия>-win64.zip` (сервер + настольная оболочка) и установщик
-`Cutline-Setup-<версия>.exe`.
+`Cutline-Desktop-Setup-<версия>.exe` (установщик Tauri с сервером внутри).
 
 ## Лицензия
 

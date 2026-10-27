@@ -32,9 +32,21 @@ fn server_ready() -> bool {
 fn server_dir() -> PathBuf {
     let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
     let dir = exe.parent().map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
-    if dir.join("Cutline.exe").exists() || dir.join("run.py").exists() {
-        return dir;
+
+    // 1. рядом с оболочкой (portable-сборка), 2. в ресурсах установщика несёт сервер
+    let candidates = [
+        dir.clone(),
+        dir.join("Cutline"),
+        dir.join("server"),
+        dir.join("resources").join("server"),
+        dir.join("_up_").join("dist").join("Cutline"),
+    ];
+    for candidate in candidates {
+        if candidate.join("Cutline.exe").exists() || candidate.join("run.py").exists() {
+            return candidate;
+        }
     }
+    // 3. запуск из репозитория (dev)
     for up in ["../..", "../../.."] {
         let candidate = dir.join(up);
         if candidate.join("run.py").exists() {
@@ -42,6 +54,34 @@ fn server_dir() -> PathBuf {
         }
     }
     dir
+}
+
+/// Гасит сервер вместе с дочерними процессами (ffmpeg и т.п.).
+fn kill_child(child: &mut Child) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        let _ = Command::new("taskkill")
+            .arg("/PID")
+            .arg(child.id().to_string())
+            .args(["/T", "/F"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output();
+    }
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
+/// Останавливает сервер, если его запускала оболочка. Вызов идемпотентен.
+fn stop_server(app: &tauri::AppHandle) {
+    if let Some(state) = app.try_state::<ServerProcess>() {
+        if let Ok(mut guard) = state.0.lock() {
+            if let Some(mut child) = guard.take() {
+                kill_child(&mut child);
+            }
+        }
+    }
 }
 
 /// Поднимает сервер, если он ещё не отвечает. Возвращает None, если сервер уже запущен.
@@ -108,19 +148,19 @@ fn main() {
             }
             Ok(())
         })
+        // Закрытие окна «крестиком» должно завершать и сервер, иначе он живёт в фоне
+        .on_window_event(|window, event| {
+            if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+                stop_server(window.app_handle());
+                window.app_handle().exit(0);
+            }
+        })
         .build(tauri::generate_context!())
         .expect("Не удалось создать окно Cutline");
 
     app.run(|handle, event| {
         if matches!(event, RunEvent::Exit) {
-            if let Some(state) = handle.try_state::<ServerProcess>() {
-                if let Ok(mut guard) = state.0.lock() {
-                    if let Some(mut child) = guard.take() {
-                        let _ = child.kill();
-                        let _ = child.wait();
-                    }
-                }
-            }
+            stop_server(handle);
         }
     });
 }
