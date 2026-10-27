@@ -16,20 +16,24 @@
 
 ## Установка
 
-### Windows — установщик (рекомендуется)
+### Windows — portable (рекомендуется)
 
-1. Скачайте `Cutline-Desktop-Setup-*.exe` со страницы [Releases](../../releases) и запустите.
-   Установщик уже содержит сервер, отдельно ничего качать не нужно.
-2. Запустите **Cutline**. При первом старте откроется мастер настройки.
-3. Нажмите «Скачать» у FFmpeg, модели распознавания речи и LLM — всё скачается само.
+Установщик не нужен: всё лежит в одном архиве.
 
-Конфиги править не нужно: модели, бинарники и результаты хранятся в `%LOCALAPPDATA%\Cutline`.
+1. Скачайте `Cutline-portable-*-win64.zip` со страницы [Releases](../../releases) и распакуйте в любую папку
+   (например, `D:\Cutline`).
+2. Запустите `Cutline Portable.cmd` — откроется нативное окно (Tauri). Для работы в браузере запустите
+   `Cutline.exe` и откройте <http://127.0.0.1:5000>.
+3. При первом старте откроется мастер настройки: нажмите «Скачать» у FFmpeg, модели распознавания речи и LLM.
 
-### Windows — portable
+Конфиги править не нужно: настройки, модели и результаты лежат рядом с программой, в папке `data`.
+Права администратора не требуются.
 
-Распакуйте `Cutline-portable-*-win64.zip` и запустите `Cutline Portable.cmd` (или `Cutline.exe` для работы
-в браузере). Настройки и модели будут лежать рядом с программой, в папке `data`. Внутри архива есть
-и настольная оболочка `Cutline Desktop.exe`.
+### Установщик Windows (опционально)
+
+Если нужны ярлыки в меню «Пуск» и деинсталлятор — соберите установщик сами:
+`packaging\build_tauri.bat` (NSIS) или `iscc packaging\cutline.iss` (Inno Setup).
+В релизах установщик больше не публикуется: он дублирует portable-архив.
 
 ### Docker (Linux / NAS)
 
@@ -77,14 +81,14 @@ python -m unittest discover -s tests -v
 
 ```bash
 packaging\build_windows.bat      # PyInstaller onedir  -> dist\Cutline\Cutline.exe
-packaging\build_tauri.bat        # оболочка Tauri      -> dist\Cutline-Desktop-Setup-*.exe
+packaging\build_tauri.bat        # оболочка Tauri      -> dist\Cutline-Desktop-Setup-*.exe / Cutline Desktop.exe
 packaging\make_portable.py       # portable ZIP        -> dist\Cutline-portable-*.zip
 iscc packaging\cutline.iss       # альтернативный установщик -> dist\Cutline-Setup.exe
 ```
 
-Релиз собирается автоматически на тег `v*`: в GitHub Releases попадают переносимый архив
-`Cutline-portable-<версия>-win64.zip` (сервер + настольная оболочка) и установщик
-`Cutline-Desktop-Setup-<версия>.exe` (установщик Tauri с сервером внутри).
+Релиз собирается автоматически на тег `v*`: в GitHub Releases попадает один архив
+`Cutline-portable-<версия>-win64.zip` — сервер, настольная оболочка и launcher. Старые ассеты
+предыдущих прогонов на тот же тег удаляются автоматически.
 
 ## Лицензия
 

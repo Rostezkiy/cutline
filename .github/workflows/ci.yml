@@ -68,40 +68,29 @@ jobs:
       - name: PyInstaller (сервер -> dist/Cutline)
         run: pyinstaller --noconfirm --clean packaging/cutline.spec
 
-      - name: Tauri (desktop-установщик с сервером внутри)
+      - name: Tauri (desktop-оболочка -> cutline-desktop.exe)
         working-directory: tauri/src-tauri
         run: |
-          Remove-Item -Recurse -Force server -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory server | Out-Null
-          Copy-Item -Recurse -Force "../../dist/Cutline/*" server
           python -c "import json, os; cfg = json.load(open('tauri.conf.json', encoding='utf-8')); cfg['version'] = os.environ['CUTLINE_VERSION'].lstrip('v'); json.dump(cfg, open('tauri.version.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2)"
-          npx --yes @tauri-apps/cli@2 build --config tauri.version.json
+          npx --yes @tauri-apps/cli@2 build --no-bundle --config tauri.version.json
+          Copy-Item "target/release/cutline-desktop.exe" "../../dist/Cutline/Cutline Desktop.exe"
 
       - name: Portable ZIP (сервер + оболочка)
-        run: |
-          Copy-Item "tauri/src-tauri/target/release/cutline-desktop.exe" "dist/Cutline/Cutline Desktop.exe"
-          python packaging/make_portable.py
+        run: python packaging/make_portable.py
 
-      - name: Установщик в dist
+      - name: Очистка старых ассетов релиза
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $ver = $env:CUTLINE_VERSION.TrimStart('v')
-          $setup = Get-ChildItem "tauri/src-tauri/target/release/bundle/nsis/*-setup.exe" | Select-Object -First 1
-          if (-not $setup) { throw "NSIS-установщик Tauri не найден" }
-          Copy-Item $setup.FullName "dist/Cutline-Desktop-Setup-$ver.exe"
-          Get-ChildItem dist | Format-Table Name, Length
-
-      - name: Публикация артефактов
-        uses: actions/upload-artifact@v4
-        with:
-          name: Cutline-windows
-          path: |
-            dist/*.zip
-            dist/Cutline-Desktop-Setup-*.exe
+          gh release view $env:CUTLINE_VERSION --json assets --jq ".assets[].name" 2>$null
+          if ($LASTEXITCODE -ne 0) { Write-Host "Релиза ещё нет — очищать нечего"; exit 0 }
+          gh release view $env:CUTLINE_VERSION --json assets --jq ".assets[].name" | ForEach-Object {
+            Write-Host "Удаляю ассет: $_"
+            gh release delete-asset $env:CUTLINE_VERSION $_ -y
+          }
 
       - name: Публикация в GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/Cutline-portable-*-win64.zip
-            dist/Cutline-Desktop-Setup-*.exe
+          files: dist/Cutline-portable-*-win64.zip
           generate_release_notes: true
