@@ -57,7 +57,7 @@ jobs:
         run: pyinstaller --noconfirm --clean packaging/cutline.spec
 
       - name: Упаковка в zip
-        run: Compress-Archive -Path dist/Cutline/* -DestinationPath Cutline-windows.zip -Force
+        run: Compress-Archive -Path dist/Cutline -DestinationPath "Cutline-portable-${{ github.ref_name }}-win64.zip" -Force
 
       - name: Публикация артефакта
         uses: actions/upload-artifact@v4
@@ -68,5 +68,5 @@ jobs:
       - name: Публикация в GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: Cutline-windows.zip
+          files: Cutline-portable-*-win64.zip
           generate_release_notes: true
