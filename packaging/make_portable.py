@@ -18,6 +18,10 @@ import shutil
 import sys
 import time
 
+# Консоль Windows по умолчанию cp1252 — без этого печать кириллицы падает
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DIST = os.path.join(ROOT, 'dist', 'Cutline')
 VERSION = (os.environ.get('CUTLINE_VERSION') or '1.0.0').lstrip('v')

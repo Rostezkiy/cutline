@@ -46,6 +46,8 @@ jobs:
       contents: write
     env:
       CUTLINE_VERSION: ${{ github.ref_name }}
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
     steps:
       - uses: actions/checkout@v4
 
