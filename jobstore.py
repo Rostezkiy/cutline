@@ -5,8 +5,19 @@ import os
 import threading
 import time
 
-from config import CACHE_FOLDER, CACHE_TTL_DAYS, JOBS_STORE, KEEP_RESULTS, MAX_CONCURRENT_JOBS, MAX_JOB_DETAILS, MAX_JOB_HISTORY, OUTPUT_FOLDER, UPLOAD_FOLDER, UPLOAD_TTL_HOURS, logger
-
+from config import (
+    CACHE_FOLDER,
+    CACHE_TTL_DAYS,
+    JOBS_STORE,
+    KEEP_RESULTS,
+    MAX_CONCURRENT_JOBS,
+    MAX_JOB_DETAILS,
+    MAX_JOB_HISTORY,
+    OUTPUT_FOLDER,
+    UPLOAD_FOLDER,
+    UPLOAD_TTL_HOURS,
+    logger,
+)
 
 # --- СОСТОЯНИЕ И ОЧЕРЕДЬ ---
 jobs = {}

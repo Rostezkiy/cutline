@@ -15,8 +15,8 @@ FROZEN = bool(getattr(sys, 'frozen', False))
 def _check_dependencies():
     try:
         import flask  # noqa: F401
-        import requests  # noqa: F401
         import pydub  # noqa: F401
+        import requests  # noqa: F401
     except ImportError as exc:
         print("Не хватает зависимостей: %s" % exc)
         print("Установите их командой: pip install -r req.txt")

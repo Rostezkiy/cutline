@@ -14,6 +14,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import flask  # noqa: E402
+
 import models_api  # noqa: E402
 
 

@@ -13,6 +13,7 @@ import zipfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import flask  # noqa: E402
+
 import files_api  # noqa: E402
 
 

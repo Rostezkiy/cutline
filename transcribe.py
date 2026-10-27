@@ -11,7 +11,6 @@ from config import CACHE_FOLDER, MODEL_DIR, WHISPER_MODEL_SIZE, logger
 from jobstore import update_job
 from media import get_duration
 
-
 # --- MODEL & HELPERS ---
 CUDA_LIBRARIES = (('cublas64_12.dll', 'cudnn_ops64_9.dll') if os.name == 'nt'
                   else ('libcublas.so.12', 'libcudnn_ops.so.9'))

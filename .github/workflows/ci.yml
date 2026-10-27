@@ -22,7 +22,7 @@ jobs:
       - name: Установка зависимостей
         run: |
           python -m pip install --upgrade pip
-          pip install flask requests pydub werkzeug waitress ruff
+          pip install flask requests pydub werkzeug waitress ruff==0.17.3
 
       - name: Линт (ruff)
         run: ruff check .

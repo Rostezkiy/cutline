@@ -10,19 +10,33 @@ from flask import Flask, g, jsonify, render_template, request, send_from_directo
 from werkzeug.utils import secure_filename
 
 import config
+import runtime_settings
+import transcribe
 from config import (
-    ALLOWED_EXTENSIONS, ALLOWED_FORMATS, ALLOWED_MODEL_SIZES, ALLOWED_MODES, CACHE_FOLDER, DATA_DIR,
-    LLM_MODEL, MAX_CONCURRENT_JOBS, MAX_FILES_PER_JOB, MAX_UPLOAD_MB, MODEL_DIR, OLLAMA_URL,
-    OUTPUT_FOLDER, TEMPLATES_DIR, TEMP_FOLDER, UPLOAD_FOLDER, WHISPER_MODEL_SIZE, logger,
+    ALLOWED_EXTENSIONS,
+    ALLOWED_FORMATS,
+    ALLOWED_MODEL_SIZES,
+    ALLOWED_MODES,
+    CACHE_FOLDER,
+    DATA_DIR,
+    LLM_MODEL,
+    MAX_CONCURRENT_JOBS,
+    MAX_FILES_PER_JOB,
+    MAX_UPLOAD_MB,
+    MODEL_DIR,
+    OLLAMA_URL,
+    OUTPUT_FOLDER,
+    TEMP_FOLDER,
+    TEMPLATES_DIR,
+    UPLOAD_FOLDER,
+    WHISPER_MODEL_SIZE,
+    logger,
 )
 from jobstore import cleanup_old_files, get_job, jobs, jobs_lock, queue_gate, set_job
 from media import download_from_url
 from pipeline import process_task_multiple
-import runtime_settings
 from summarize import ollama_status
-import transcribe
 from transcribe import _model_cache, device_info, normalize_text
-
 
 # --- ПРИЛОЖЕНИЕ ---
 app = Flask(__name__, template_folder=TEMPLATES_DIR)

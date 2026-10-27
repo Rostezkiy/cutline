@@ -201,6 +201,7 @@ _register_binary_dirs()
 
 # Импорт после настройки ffmpeg: иначе pydub ругается RuntimeWarning'ом на старте.
 from pydub import AudioSegment  # noqa: E402
+
 AudioSegment.converter = FFMPEG_PATH
 AudioSegment.ffprobe = FFPROBE_PATH
 
