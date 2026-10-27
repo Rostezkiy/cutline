@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Базовые разрешения окна Cutline (IPC не используется: оболочка только показывает локальный сервер).",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

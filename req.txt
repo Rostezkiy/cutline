@@ -1,0 +1,13 @@
+flask==3.0.3
+faster-whisper>=1.0.3,<2  # STT (качает модель с HuggingFace автоматически при первом запуске)
+# av>=17 переименовал metadata_errors -> metadata_encoding: faster-whisper зовёт av.open()
+# со старым аргументом и падает с TypeError на декодировании. Держим 15-16.
+av>=15,<17  # декодер аудио внутри faster-whisper (PyAV)
+pydub==0.25.1
+werkzeug==3.0.3
+requests==2.32.3
+waitress>=3.0.0  # production-WSGI сервер для локального запуска (вместо dev-сервера Flask)
+yt-dlp>=2024.4.9  # опционально: скачивание по ссылкам (YouTube)
+
+# torch/torchaudio больше не нужны: устройство (CPU/CUDA) определяется через ctranslate2,
+# это экономит ~2 ГБ при установке.

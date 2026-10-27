@@ -1,0 +1,31 @@
+/temp_chunks
+/processed
+/models
+/bin
+/cache_transcripts
+/.venv
+/.venv-build
+/uploads
+/logs
+/presets.json
+
+__pycache__/
+.dirac-cache/
+*.pyc
+/dist/
+/tauri/src-tauri/target/
+/build/
+/*.spec
+.pytest_cache/
+.ruff_cache/
+
+# Сборка: скачанные бинарники ffmpeg/ffprobe (≈340 МБ) и логи сборки
+/packaging/bin/
+build_*.log
+e2e_test.log
+portable.log
+innosetup_install.log
+tauri_build.log
+
+# Tauri: локальные логи сборки оболочки
+tauri_*.log

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Cutline | AI Media Processor</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <script>
+        // Тема применяется до первой отрисовки, чтобы не было "вспышки" светлой темы.
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                var dark = stored ? stored === 'dark'
+                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('dark', dark);
+            } catch (e) { /* приватный режим - остаёмся на тёмной теме по умолчанию */ }
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Иконки: инлайн-спрайт, без внешних CDN (приложение работает офлайн) -->
+    <svg class="icon-sprite" aria-hidden="true" focusable="false">
+        <symbol id="i-wave" viewBox="0 0 24 24">
+            <path d="M3 12h2.5l2-6 3 12 3-12 2 6H21" />
+        </symbol>
+        <symbol id="i-upload-cloud" viewBox="0 0 24 24">
+            <path d="M7 17H5.5a3.5 3.5 0 010-7 5 5 0 019.6-1.6A4 4 0 0118 17h-1" />
+            <path d="M12 21V11" />
+            <path d="M8.5 14.5L12 11l3.5 3.5" />
+        </symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24">
+            <path d="M12 16V4" />
+            <path d="M7 9l5-5 5 5" />
+            <path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
+        </symbol>
+        <symbol id="i-download" viewBox="0 0 24 24">
+            <path d="M12 4v11" />
+            <path d="M7 11l5 5 5-5" />
+            <path d="M5 20h14" />
+        </symbol>
+        <symbol id="i-filter" viewBox="0 0 24 24">
+            <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+        </symbol>
+        <symbol id="i-chevron-down" viewBox="0 0 24 24">
+            <path d="M6 9l6 6 6-6" />
+        </symbol>
+        <symbol id="i-save" viewBox="0 0 24 24">
+            <path d="M5 3h11l3 3v15H5z" />
+            <path d="M8 3v6h8V3" />
+            <path d="M8 21v-6h8v6" />
+        </symbol>
+        <symbol id="i-scissors" viewBox="0 0 24 24">
+            <circle cx="6" cy="6" r="2.5" />
+            <circle cx="6" cy="18" r="2.5" />
+            <path d="M8.2 7.6L20 19M20 5L8.2 16.4" />
+        </symbol>
+        <symbol id="i-magnet" viewBox="0 0 24 24">
+            <path d="M6 3h4v9a2 2 0 004 0V3h4v9a6 6 0 01-12 0z" />
+        </symbol>
+        <symbol id="i-volume" viewBox="0 0 24 24">
+            <path d="M4 9v6h3l5 4V5L7 9H4z" />
+            <path d="M15.5 9.5a3.5 3.5 0 010 5M18 7a7 7 0 010 10" />
+        </symbol>
+        <symbol id="i-book" viewBox="0 0 24 24">
+            <path d="M12 6c-2-1.5-4-2-8-2v13c4 0 6 .5 8 2 2-1.5 4-2 8-2V4c-4 0-6 .5-8 2z" />
+            <path d="M12 6v15" />
+        </symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24">
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M5 11a7 7 0 0014 0" />
+            <path d="M12 18v3M9 21h6" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M16 16l4 4" />
+        </symbol>
+        <symbol id="i-sparkles" viewBox="0 0 24 24">
+            <path d="M12 3l1.8 4.6L18.5 9.4 13.8 11 12 15.6 10.2 11 5.5 9.4l4.7-1.8z" />
+            <path d="M18 15l.9 2.1 2.1.9-2.1.9L18 21l-.9-2.1-2.1-.9 2.1-.9z" />
+        </symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7.5" height="7.5" rx="1.8" />
+            <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.8" />
+            <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.8" />
+            <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.8" />
+        </symbol>
+        <symbol id="i-ban" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M5.6 5.6l12.8 12.8" />
+        </symbol>
+        <symbol id="i-rocket" viewBox="0 0 24 24">
+            <path d="M14 4c3 1 5 3 6 6-2 4-6 7-9 9l-4-4c2-3 5-7 7-11z" />
+            <circle cx="14.5" cy="9.5" r="1.6" />
+            <path d="M7 15l-3 1 1-3M9 19l1 2 2-3" />
+        </symbol>
+        <symbol id="i-play" viewBox="0 0 24 24">
+            <path d="M8 5l11 7-11 7z" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24">
+            <path d="M9 5v14M15 5v14" />
+        </symbol>
+        <symbol id="i-refresh" viewBox="0 0 24 24">
+            <path d="M20.5 12a8.5 8.5 0 11-2.6-6.1" />
+            <path d="M20.5 4.5V10h-5.2" />
+        </symbol>
+        <symbol id="i-clipboard" viewBox="0 0 24 24">
+            <path d="M9 3h6v3H9z" />
+            <rect x="5" y="6" width="14" height="15" rx="2" />
+        </symbol>
+        <symbol id="i-history" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5V12l3 2" />
+        </symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24">
+            <path d="M4 20h16" />
+            <path d="M7 18v-5M12 18V8M17 18v-8" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+            <path d="M6 6l12 12M18 6L6 18" />
+        </symbol>
+        <symbol id="i-video" viewBox="0 0 24 24">
+            <rect x="2.5" y="6" width="13" height="12" rx="2.2" />
+            <path d="M16 10.5l5-3v9l-5-3z" />
+        </symbol>
+        <symbol id="i-audio" viewBox="0 0 24 24">
+            <path d="M4 15V9h4l4-4v14l-4-4H4z" />
+            <path d="M16 9a4 4 0 010 6" />
+        </symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24">
+            <path d="M11 3h7a3 3 0 013 3v7l-9 9-10-10z" />
+            <circle cx="16.5" cy="7.5" r="1.5" />
+        </symbol>
+        <symbol id="i-check-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8 12.4l2.6 2.6L16 9.6" />
+        </symbol>
+        <symbol id="i-x-circle" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9 9l6 6M15 9l-6 6" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+            <path d="M5 12.5l4.5 4.5L19 7" />
+        </symbol>
+        <symbol id="i-warning" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7.5v6M12 16.6v.01" />
+        </symbol>
+        <symbol id="i-film" viewBox="0 0 24 24">
+            <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
+            <path d="M8 4.5v15M16 4.5v15M2.5 12h19" />
+        </symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24">
+            <rect x="7" y="7" width="10" height="10" rx="2" />
+            <path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3" />
+        </symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M15 9V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3" />
+        </symbol>
+        <symbol id="i-ghost" viewBox="0 0 24 24">
+            <path d="M6 21V10a6 6 0 1112 0v11l-3-2-3 2-3-2z" />
+            <path d="M10 10h.01M14 10h.01" />
+        </symbol>
+        <symbol id="i-export" viewBox="0 0 24 24">
+            <path d="M12 15V4" />
+            <path d="M8 8l4-4 4 4" />
+            <path d="M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4" />
+        </symbol>
+        <symbol id="i-import" viewBox="0 0 24 24">
+            <path d="M12 4v11" />
+            <path d="M8 11l4 4 4-4" />
+            <path d="M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24">
+            <path d="M4 7h16" />
+            <path d="M10 4h4" />
+            <path d="M6 7l1 13h10l1-13" />
+            <path d="M10 11v6M14 11v6" />
+        </symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" />
+        </symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24">
+            <path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z" />
+        </symbol>
+        <symbol id="i-link" viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1" />
+            <path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1" />
+        </symbol>
+        <symbol id="i-package" viewBox="0 0 24 24">
+            <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+            <path d="M4 7.5l8 4.5 8-4.5M12 12v9" />
+        </symbol>
+        <symbol id="i-server" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="7" rx="2" />
+            <rect x="3" y="13" width="18" height="7" rx="2" />
+            <path d="M7 7.5h.01M7 16.5h.01" />
+        </symbol>
+        <symbol id="i-sliders" viewBox="0 0 24 24">
+            <path d="M4 7h8M17 7h3M4 12h3M12 12h8M4 17h8M17 17h3" />
+            <circle cx="14.5" cy="7" r="2" />
+            <circle cx="9.5" cy="12" r="2" />
+            <circle cx="14.5" cy="17" r="2" />
+        </symbol>
+    </svg>
+
+    <!-- Уведомления -->
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+    <!-- Шапка -->
+    <header class="topbar">
+        <div class="topbar__inner">
+            <a class="brand" href="#" onclick="switchTab('home');return false;">
+                <span class="brand__logo"><svg class="icon">
+                        <use href="#i-wave"></use>
+                    </svg></span>
+                <span class="brand__text">Cutline <em>AI</em></span>
+            </a>
+
+            <nav class="nav" role="tablist" aria-label="Разделы" data-i18n-aria="aria.sections">
+                <button type="button" onclick="switchTab('home')" id="tab-home" class="nav-btn" data-i18n="nav.home"
+                    role="tab">Главная</button>
+                <button type="button" onclick="switchTab('settings')" id="tab-settings" class="nav-btn"
+                    data-i18n="nav.settings" role="tab">Настройки</button>
+                <button type="button" onclick="switchTab('results')" id="tab-results" class="nav-btn" role="tab">
+                    <span data-i18n="nav.results">Результаты</span>
+                    <span id="res-badge" class="nav-btn__badge hidden" aria-hidden="true"></span>
+                </button>
+            </nav>
+
+            <div class="topbar__actions">
+                <button type="button" onclick="toggleLang()" id="btn-lang" class="icon-btn"
+                    aria-label="Switch language">RU</button>
+                <button type="button" onclick="toggleTheme()" class="icon-btn" aria-label="Toggle theme">
+                    <svg class="icon dark-only">
+                        <use href="#i-moon"></use>
+                    </svg>
+                    <svg class="icon light-only">
+                        <use href="#i-sun"></use>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <!-- ============================= ГЛАВНАЯ ============================= -->
+        <div id="view-home" class="tab-content active">
+            <div class="stack">
+                <!-- Загрузка файлов -->
+                <section id="upload-dropzone" class="dropzone">
+                    <input type="file" id="file-input" class="dropzone__input" multiple
+                        accept="audio/*,video/*,.ogg,.mkv,.flac,.wav,.mp4,.mov,.mp3,.m4a,.opus,.aac"
+                        aria-label="Выбрать файлы" data-i18n-aria="aria.chooseFiles">
+
+                    <div id="upload-placeholder">
+                        <div class="dropzone__icon">
+                            <svg class="icon">
+                                <use href="#i-upload-cloud"></use>
+                            </svg>
+                        </div>
+                        <h2 class="dropzone__title" data-i18n="upload.hint">Перетащите файлы сюда или нажмите для
+                            выбора</h2>
+                        <p class="dropzone__hint" data-i18n="upload.supported">Аудио / видео, можно несколько файлов
+                        </p>
+                        <div class="url-row">
+                            <span class="url-row__or" data-i18n="upload.or">или</span>
+                            <input type="text" id="url-input" class="input" data-i18n-ph="upload.urlPh"
+                                placeholder="Вставьте ссылку (YouTube)..." onclick="event.stopPropagation()">
+                        </div>
+                    </div>
+
+                    <div id="file-list-panel" class="file-panel hidden">
+                        <div id="file-list" class="list"></div>
+                        <div class="file-panel__foot">
+                            <span id="file-list-total"></span>
+                            <button type="button" onclick="clearAllFiles()" id="btn-clear-files"
+                                class="link-btn link-btn--danger">
+                                <svg class="icon">
+                                    <use href="#i-trash"></use>
+                                </svg>
+                                <span data-i18n="upload.clear">Очистить всё</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Фильтр слов -->
+                <section class="card">
+                    <div class="tags-head">
+                        <button type="button" class="tags-toggle" onclick="toggleTagsView()">
+                            <svg class="icon">
+                                <use href="#i-filter"></use>
+                            </svg>
+                            <span data-i18n="tags.title">Фильтр слов</span>
+                            <span id="tags-toggle-icon" class="tags-toggle__chevron">
+                                <svg class="icon">
+                                    <use href="#i-chevron-down"></use>
+                                </svg>
+                            </span>
+                        </button>
+                        <div id="quick-presets-home" class="quick-presets"></div>
+                    </div>
+
+                    <div id="tags-wrapper" class="tags-wrap">
+                        <div class="tags-box" onclick="document.getElementById('tag-input').focus()">
+                            <div id="tags-container" class="row row--wrap"></div>
+                            <input type="text" id="tag-input" class="tags-input" data-i18n-ph="tags.placeholder"
+                                placeholder="Введите слово и нажмите Enter...">
+                        </div>
+                        <div id="tags-fade" class="tags-fade"></div>
+                    </div>
+
+                    <div class="row row--between" style="margin-top: var(--sp-2)">
+                        <button type="button" onclick="clearAllTags()" class="link-btn link-btn--danger">
+                            <svg class="icon">
+                                <use href="#i-trash"></use>
+                            </svg>
+                            <span data-i18n="tags.clear">Очистить</span>
+                        </button>
+                        <button type="button" onclick="saveCurrentPreset()" class="link-btn">
+                            <svg class="icon">
+                                <use href="#i-save"></use>
+                            </svg>
+                            <span data-i18n="tags.savePreset">Сохранить как пресет</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Режим обработки -->
+                <section class="mode-grid" role="radiogroup" aria-label="Режим обработки"
+                    data-i18n-aria="aria.modeGroup">
+                    <label class="mode mode--remove">
+                        <input type="radio" name="mode" value="remove" checked onchange="onModeChange()">
+                        <span class="mode__card">
+                            <span class="mode__icon"><svg class="icon">
+                                    <use href="#i-scissors"></use>
+                                </svg></span>
+                            <span class="mode__label" data-i18n="mode.remove">Удалить</span>
+                        </span>
+                    </label>
+                    <label class="mode mode--save">
+                        <input type="radio" name="mode" value="save" onchange="onModeChange()">
+                        <span class="mode__card">
+                            <span class="mode__icon"><svg class="icon">
+                                    <use href="#i-magnet"></use>
+                                </svg></span>
+                            <span class="mode__label" data-i18n="mode.save">Изолировать</span>
+                        </span>
+                    </label>
+                    <label class="mode mode--replace">
+                        <input type="radio" name="mode" value="replace" onchange="onModeChange()">
+                        <span class="mode__card">
+                            <span class="mode__icon"><svg class="icon">
+                                    <use href="#i-volume"></use>
+                                </svg></span>
+                            <span class="mode__label" data-i18n="mode.replace">Запикать</span>
+                        </span>
+                    </label>
+                    <label class="mode mode--summarize">
+                        <input type="radio" name="mode" value="summarize" onchange="onModeChange()">
+                        <span class="mode__card">
+                            <span class="mode__icon"><svg class="icon">
+                                    <use href="#i-book"></use>
+                                </svg></span>
+                            <span class="mode__label" data-i18n="mode.summarize">Пересказ</span>
+                        </span>
+                    </label>
+                </section>
+
+                <!-- Запуск и прогресс -->
+                <section class="run-area">
+                    <div id="progress-area" class="progress-panel hidden">
+                        <div class="progress">
+                            <div class="progress__meta">
+                                <span id="status-text" class="progress__status"
+                                    data-i18n="status.init">Инициализация...</span>
+                                <span id="percent-text" class="progress__percent">0%</span>
+                            </div>
+                            <div class="progress__track">
+                                <div id="progress-bar" class="progress__bar progress__bar--striped"></div>
+                            </div>
+                        </div>
+
+                        <div id="stage-list" class="stage-list">
+                            <span id="stage-upload" class="stage-chip">
+                                <svg class="icon">
+                                    <use href="#i-upload"></use>
+                                </svg>
+                                <span data-i18n="stage.upload">Загрузка</span>
+                            </span>
+                            <span id="stage-transcribe" class="stage-chip">
+                                <svg class="icon">
+                                    <use href="#i-mic"></use>
+                                </svg>
+                                <span data-i18n="stage.transcribe">Транскрибация</span>
+                            </span>
+                            <span id="stage-analyze" class="stage-chip">
+                                <svg class="icon">
+                                    <use href="#i-search"></use>
+                                </svg>
+                                <span data-i18n="stage.analyze">Анализ</span>
+                            </span>
+                            <span id="stage-render" class="stage-chip">
+                                <svg class="icon">
+                                    <use href="#i-sparkles"></use>
+                                </svg>
+                                <span data-i18n="stage.render">Рендер</span>
+                            </span>
+                            <span id="stage-concat" class="stage-chip">
+                                <svg class="icon">
+                                    <use href="#i-layers"></use>
+                                </svg>
+                                <span data-i18n="stage.concat">Склейка</span>
+                            </span>
+                        </div>
+
+                        <button type="button" onclick="cancelCurrentJob()" id="cancel-btn"
+                            class="btn btn--danger btn--sm" style="align-self: center">
+                            <svg class="icon">
+                                <use href="#i-ban"></use>
+                            </svg>
+                            <span data-i18n="stage.cancel">Отменить</span>
+                        </button>
+                    </div>
+
+                    <button type="button" onclick="startProcessing()" id="start-btn"
+                        class="btn btn--primary btn--lg btn--block">
+                        <svg class="icon">
+                            <use href="#i-rocket"></use>
+                        </svg>
+                        <span data-i18n="startBtn">Начать обработку</span>
+                    </button>
+                </section>
+            </div>
+        </div>
+
+        <!-- ============================ НАСТРОЙКИ =========================== -->
+        <div id="view-settings" class="tab-content">
+            <div class="stack">
+                <div class="grid grid--2">
+                    <!-- Основные -->
+                    <section class="card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-sliders"></use>
+                                </svg>
+                                <span data-i18n="settings.general">Основные настройки</span>
+                            </h2>
+                        </div>
+
+                        <div class="slider-row">
+                            <div class="field__label">
+                                <label for="set-padding" data-i18n="settings.padding">Отступ (мс)</label>
+                                <span id="pad-val" class="value-pill">0 ms</span>
+                            </div>
+                            <input type="range" id="set-padding" class="range" min="0" max="500" step="10" value="0"
+                                oninput="updateSettingUI()">
+                        </div>
+
+                        <div class="setting-grid" style="margin-top: var(--sp-4)">
+                            <div class="field">
+                                <label class="field__label" for="set-format" data-i18n="settings.format">Формат
+                                    аудио</label>
+                                <select id="set-format" class="select" onchange="saveSettingsLocally()">
+                                    <option value="mp3">MP3</option>
+                                    <option value="wav">WAV</option>
+                                    <option value="ogg">OGG</option>
+                                    <option value="flac">FLAC</option>
+                                    <option value="mp4">MP4 (video)</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="set-language" data-i18n="settings.language">Язык
+                                    распознавания</label>
+                                <select id="set-language" class="select" onchange="saveSettingsLocally()">
+                                    <option value="">Auto</option>
+                                    <option value="ru">Русский</option>
+                                    <option value="en">English</option>
+                                    <option value="uk">Українська</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="fr">Français</option>
+                                    <option value="es">Español</option>
+                                    <option value="it">Italiano</option>
+                                    <option value="pl">Polski</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="set-model-size" data-i18n="settings.model">Модель
+                                    Whisper</label>
+                                <select id="set-model-size" class="select" onchange="saveSettingsLocally()">
+                                    <option value="small" data-i18n="settings.modelSmall">Small (быстро)</option>
+                                    <option value="medium" selected data-i18n="settings.modelMedium">Medium (баланс)
+                                    </option>
+                                    <option value="large" data-i18n="settings.modelLarge">Large (точно)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="stack--tight" style="margin-top: var(--sp-4)">
+                            <label class="switch">
+                                <input type="checkbox" id="set-stem" onchange="saveSettingsLocally()">
+                                <span class="switch__text" data-i18n="settings.stem">Искать по основе слова (напр.
+                                    «мат» найдёт «мата», «матом»)</span>
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="set-accurate" checked>
+                                <span class="switch__text" data-i18n="queue.accurate">Точная нарезка (медленнее, но без
+                                    сдвига границ)</span>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Бип -->
+                    <section class="card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-volume"></use>
+                                </svg>
+                                <span data-i18n="settings.beep">Настройки бипа</span>
+                            </h2>
+                            <button type="button" onclick="previewBeep()" id="btn-preview-beep"
+                                class="btn btn--soft btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-play"></use>
+                                </svg>
+                                <span data-i18n="settings.previewBeep">Прослушать звук</span>
+                            </button>
+                        </div>
+
+                        <div class="slider-row">
+                            <div class="field__label">
+                                <label for="set-freq" data-i18n="settings.freq">Частота (Гц)</label>
+                                <span id="freq-val" class="value-pill">1000 Hz</span>
+                            </div>
+                            <input type="range" id="set-freq" class="range" min="200" max="2000" step="50" value="1000"
+                                oninput="updateSettingUI()">
+                        </div>
+
+                        <div class="slider-row" style="margin-top: var(--sp-3)">
+                            <div class="field__label">
+                                <label for="set-gain" data-i18n="settings.gain">Громкость (Gain)</label>
+                                <span id="gain-val" class="value-pill">-10 dB</span>
+                            </div>
+                            <input type="range" id="set-gain" class="range" min="-30" max="0" step="1" value="-10"
+                                oninput="updateSettingUI()">
+                        </div>
+
+                        <label class="switch" style="margin-top: var(--sp-2)">
+                            <input type="checkbox" id="set-mute" onchange="saveSettingsLocally()">
+                            <span class="switch__text" data-i18n="settings.mute">Заглушить тишиной вместо бипа
+                                (длительность сохраняется)</span>
+                        </label>
+                    </section>
+
+                    <!-- Модели ИИ -->
+                    <section class="card" id="models-card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-package"></use>
+                                </svg>
+                                <span data-i18n="models.title">Модели ИИ</span>
+                            </h2>
+                            <div class="row">
+                                <span id="models-active-badge" class="badge">…</span>
+                                <button type="button" onclick="refreshModels()" class="icon-btn"
+                                    aria-label="Обновить список моделей" data-i18n-aria="aria.refreshModels">
+                                    <svg class="icon">
+                                        <use href="#i-refresh"></use>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p id="models-status" class="card__hint" data-i18n="models.loading">
+                            Проверяю модели...</p>
+
+                        <div class="field" style="margin-top: var(--sp-3)">
+                            <span class="field__label">
+                                <span data-i18n="models.installed">Уже установлены в Ollama</span>
+                                <span class="subtle" id="models-count"></span>
+                            </span>
+                            <div id="models-list" class="model-list"></div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="grid grid--2">
+                            <div class="field">
+                                <label class="field__label" for="models-name-input"
+                                    data-i18n="models.pullByName">Скачать по имени</label>
+                                <div class="row">
+                                    <input type="text" id="models-name-input" class="input" list="models-datalist"
+                                        placeholder="gemma3:4b" data-i18n-ph="models.namePh">
+                                    <datalist id="models-datalist"></datalist>
+                                    <button type="button" onclick="pullModelByName()" id="models-pull-btn"
+                                        class="btn btn--primary btn--sm">
+                                        <svg class="icon">
+                                            <use href="#i-download"></use>
+                                        </svg>
+                                        <span data-i18n="models.download">Скачать</span>
+                                    </button>
+                                </div>
+                                <span class="card__hint" data-i18n="models.pullHint">Любая модель из
+                                    библиотеки Ollama: llama3.2, qwen2.5:7b, mistral…</span>
+                            </div>
+
+                            <div class="field">
+                                <label class="field__label" for="models-url-input" data-i18n="models.importTitle">Импорт
+                                    по ссылке (.gguf)</label>
+                                <input type="text" id="models-url-input" class="input"
+                                    placeholder="https://huggingface.co/…/model.gguf">
+                                <div class="row" style="margin-top: var(--sp-2)">
+                                    <input type="text" id="models-url-name" class="input"
+                                        data-i18n-ph="models.importNamePh" placeholder="имя модели">
+                                    <button type="button" onclick="importModelFromUrl()" id="models-import-btn"
+                                        class="btn btn--ghost btn--sm">
+                                        <svg class="icon">
+                                            <use href="#i-link"></use>
+                                        </svg>
+                                        <span data-i18n="models.import">Импорт</span>
+                                    </button>
+                                </div>
+                                <span class="card__hint" data-i18n="models.importHint">Прямая ссылка на GGUF-файл:
+                                    скачаем и создадим модель через Ollama.</span>
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="field">
+                            <span class="field__label">
+                                <span data-i18n="models.whisperTitle">Модель распознавания речи</span>
+                                <span id="models-whisper-hint" class="subtle"></span>
+                            </span>
+                            <div class="row">
+                                <select id="models-whisper-size" class="select"></select>
+                                <button type="button" onclick="downloadWhisperFromSettings()" id="models-whisper-btn"
+                                    class="btn btn--soft btn--sm">
+                                    <svg class="icon">
+                                        <use href="#i-download"></use>
+                                    </svg>
+                                    <span data-i18n="models.whisperDownload">Скачать</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="models-progress" class="progress hidden" style="margin-top: var(--sp-4)">
+                            <div class="progress__meta">
+                                <span id="models-progress-label" class="progress__status"></span>
+                                <span id="models-progress-percent" class="progress__percent"></span>
+                            </div>
+                            <div class="progress__track">
+                                <div id="models-progress-bar" class="progress__bar progress__bar--striped"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Пресеты -->
+                    <section class="card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-tag"></use>
+                                </svg>
+                                <span data-i18n="settings.presets">Пресеты</span>
+                            </h2>
+                        </div>
+
+                        <div class="row">
+                            <input type="text" id="new-preset-name" class="input" data-i18n-ph="settings.presetName"
+                                placeholder="Название пресета...">
+                            <button type="button" onclick="saveCurrentPreset()" class="btn btn--primary btn--icon"
+                                aria-label="Сохранить пресет" data-i18n-aria="aria.savePreset">
+                                <svg class="icon">
+                                    <use href="#i-plus"></use>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div id="presets-list" class="list" style="margin-top: var(--sp-3)"></div>
+
+                        <div class="row row--wrap" style="margin-top: var(--sp-3)">
+                            <button type="button" onclick="exportPresets()" class="btn btn--ghost btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-export"></use>
+                                </svg>
+                                <span data-i18n="presets.export">Экспорт</span>
+                            </button>
+                            <button type="button" onclick="document.getElementById('presets-import-file').click()"
+                                class="btn btn--ghost btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-import"></use>
+                                </svg>
+                                <span data-i18n="presets.import">Импорт</span>
+                            </button>
+                            <input type="file" id="presets-import-file" accept="application/json,.json" class="hidden"
+                                onchange="importPresets(this)">
+                        </div>
+                    </section>
+
+                    <!-- Очередь -->
+                    <section class="card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-layers"></use>
+                                </svg>
+                                <span data-i18n="queue.title">Очередь и точность</span>
+                            </h2>
+                            <span id="queue-status-text" class="badge"></span>
+                        </div>
+                        <div class="row row--wrap">
+                            <button type="button" onclick="pauseQueue()" id="btn-queue-pause"
+                                class="btn btn--ghost btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-pause"></use>
+                                </svg>
+                                <span data-i18n="queue.pause">Пауза очереди</span>
+                            </button>
+                            <button type="button" onclick="resumeQueue()" id="btn-queue-resume"
+                                class="btn btn--soft btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-play"></use>
+                                </svg>
+                                <span data-i18n="queue.resume">Продолжить</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Система -->
+                    <section class="card">
+                        <div class="card__head">
+                            <h2 class="card__title">
+                                <svg class="icon">
+                                    <use href="#i-server"></use>
+                                </svg>
+                                <span data-i18n="setup.system">Система</span>
+                            </h2>
+                            <button type="button" onclick="refreshSystemCard()" class="icon-btn" aria-label="Обновить"
+                                data-i18n-aria="aria.refresh">
+                                <svg class="icon">
+                                    <use href="#i-refresh"></use>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="system-status-text" class="stack--tight">
+                            <p class="status-line" data-i18n="setup.loading">Проверяю окружение...</p>
+                        </div>
+                        <div class="row row--wrap" style="margin-top: var(--sp-4)">
+                            <button type="button" onclick="openSetupWizard()" class="btn btn--primary btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-sparkles"></use>
+                                </svg>
+                                <span data-i18n="setup.open">Мастер настройки</span>
+                            </button>
+                            <button type="button" onclick="copySystemReport()" class="btn btn--ghost btn--sm">
+                                <svg class="icon">
+                                    <use href="#i-clipboard"></use>
+                                </svg>
+                                <span data-i18n="setup.copyReport">Скопировать отчёт</span>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================ РЕЗУЛЬТАТЫ ========================== -->
+        <div id="view-results" class="tab-content">
+            <div class="stack">
+                <!-- История -->
+                <section class="card">
+                    <div class="card__head card__head--tight">
+                        <h2 class="card__title">
+                            <svg class="icon">
+                                <use href="#i-history"></use>
+                            </svg>
+                            <span data-i18n="history.title">История</span>
+                        </h2>
+                    </div>
+                    <div id="history-list" class="list">
+                        <p class="empty-state" id="history-empty" data-i18n="history.empty">Задач пока нет</p>
+                    </div>
+                </section>
+
+                <!-- Пустое состояние результата -->
+                <section id="result-status-card" class="card">
+                    <div class="empty-state">
+                        <svg class="icon">
+                            <use href="#i-chart"></use>
+                        </svg>
+                        <p data-i18n="results.empty">Результатов пока нет</p>
+                    </div>
+                </section>
+
+                <div id="results-content" class="stack hidden">
+                    <!-- Скачивание -->
+                    <div class="downloads">
+                        <a id="btn-download-media" href="#" class="downloads__main">
+                            <svg class="icon">
+                                <use href="#i-download"></use>
+                            </svg>
+                            <span id="dl-text" data-i18n="history.download">Скачать</span>
+                        </a>
+                        <div class="downloads__side">
+                            <a id="btn-download-srt" href="#" class="downloads__chip" title="Download SRT">SRT</a>
+                            <a id="btn-download-txt" href="#" class="downloads__chip" title="Download TXT">TXT</a>
+                            <a id="btn-download-hl" href="#" class="downloads__chip"
+                                title="Download highlighted SRT">HL</a>
+                            <a id="btn-download-zip" href="#" class="downloads__chip downloads__chip--zip"
+                                title="Download all files (ZIP)">ZIP</a>
+                            <a id="btn-download-json" href="#" class="downloads__chip"
+                                title="Download JSON report">JSON</a>
+                        </div>
+                    </div>
+
+                    <!-- Превью -->
+                    <section class="card">
+                        <div id="media-preview-container" class="media-frame"></div>
+                    </section>
+
+                    <!-- Данные -->
+                    <section class="card card--flush">
+                        <div class="tabs">
+                            <button type="button" onclick="toggleResultView('table')" id="res-tab-table"
+                                class="res-tab active" data-i18n="results.tab.matches">Совпадения</button>
+                            <button type="button" onclick="toggleResultView('summary')" id="res-tab-summary"
+                                class="res-tab" data-i18n="results.tab.statistics">Статистика</button>
+                            <button type="button" onclick="toggleResultView('text')" id="res-tab-text" class="res-tab"
+                                data-i18n="results.tab.transcript">Полный текст</button>
+                            <button type="button" onclick="toggleResultView('summarize')" id="res-tab-summarize"
+                                class="res-tab hidden" data-i18n="results.tab.summary">AI Пересказ</button>
+                        </div>
+
+                        <!-- 1. Совпадения -->
+                        <div id="res-view-table" class="res-view">
+                            <div class="table-wrap">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="results.col.time">Время</th>
+                                            <th data-i18n="results.col.word">Слово</th>
+                                            <th data-i18n="results.col.context">Контекст</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="matches-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 2. Статистика -->
+                        <div id="res-view-summary" class="res-view hidden">
+                            <div class="table-wrap">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="results.col.word">Слово</th>
+                                            <th data-i18n="results.col.count">Кол-во</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summary-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 3. Полный текст -->
+                        <div id="res-view-text" class="res-view hidden" style="padding: var(--sp-5)">
+                            <div class="row" style="margin-bottom: var(--sp-3)">
+                                <input type="text" id="transcript-search" class="input" data-i18n-ph="results.searchPh"
+                                    placeholder="Поиск по тексту..." oninput="filterTranscript()">
+                                <span id="transcript-count" class="badge"></span>
+                            </div>
+                            <div id="transcript-text" class="reader"></div>
+                        </div>
+
+                        <!-- 4. Пересказ -->
+                        <div id="res-view-summarize" class="res-view hidden" style="padding: var(--sp-5)">
+                            <div class="row row--between" style="margin-bottom: var(--sp-2)">
+                                <span></span>
+                                <button type="button" onclick="copySummary()" id="btn-copy-summary"
+                                    class="btn btn--ghost btn--sm">
+                                    <svg class="icon">
+                                        <use href="#i-copy"></use>
+                                    </svg>
+                                    <span data-i18n="results.copy">Копировать</span>
+                                </button>
+                            </div>
+                            <div id="summarize-text" class="reader"></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Мастер первичной настройки -->
+    <div id="setup-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+        <div class="modal__panel">
+            <div class="modal__head">
+                <div>
+                    <h2 class="modal__title" id="setup-title" data-i18n="setup.title">Первичная настройка</h2>
+                    <p class="modal__subtitle" data-i18n="setup.subtitle">Проверим окружение и скачаем модели -
+                        конфиги трогать не нужно.</p>
+                </div>
+                <button type="button" onclick="closeSetupWizard()" class="icon-btn" aria-label="Закрыть"
+                    data-i18n-aria="aria.close">
+                    <svg class="icon">
+                        <use href="#i-close"></use>
+                    </svg>
+                </button>
+            </div>
+
+            <p id="setup-summary" class="badge"></p>
+
+            <div class="card" style="padding: var(--sp-4)">
+                <div class="row row--between">
+                    <span class="row" style="font-weight: 600">
+                        <svg class="icon" style="color: var(--accent)">
+                            <use href="#i-film"></use>
+                        </svg>
+                        <span data-i18n="setup.ffmpeg">FFmpeg (обработка медиа)</span>
+                    </span>
+                    <span id="setup-ffmpeg-badge" class="badge">…</span>
+                </div>
+                <p id="setup-ffmpeg-hint" class="card__hint hidden"></p>
+                <div class="row" style="margin-top: var(--sp-3)">
+                    <button type="button" onclick="downloadFfmpeg()" id="setup-ffmpeg-download"
+                        class="btn btn--primary btn--sm">
+                        <svg class="icon">
+                            <use href="#i-download"></use>
+                        </svg>
+                        <span data-i18n="setup.downloadFfmpeg">Скачать FFmpeg</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" style="padding: var(--sp-4)">
+                <div class="row row--between">
+                    <span class="row" style="font-weight: 600">
+                        <svg class="icon" style="color: var(--accent)">
+                            <use href="#i-mic"></use>
+                        </svg>
+                        <span data-i18n="setup.whisper">Модель распознавания речи</span>
+                    </span>
+                    <span id="setup-whisper-badge" class="badge">…</span>
+                </div>
+                <p id="setup-whisper-hint" class="card__hint"></p>
+                <div class="row" style="margin-top: var(--sp-3)">
+                    <select id="setup-model-size" class="select"></select>
+                    <button type="button" onclick="downloadWhisperModel()" id="setup-download-btn"
+                        class="btn btn--primary btn--sm">
+                        <svg class="icon">
+                            <use href="#i-download"></use>
+                        </svg>
+                        <span data-i18n="setup.download">Скачать модель</span>
+                    </button>
+                </div>
+                <div id="setup-progress-wrap" class="progress hidden" style="margin-top: var(--sp-3)">
+                    <div class="progress__track">
+                        <div id="setup-progress-bar" class="progress__bar progress__bar--striped"></div>
+                    </div>
+                    <p id="setup-progress-text" class="card__hint"></p>
+                </div>
+            </div>
+
+            <div class="card" style="padding: var(--sp-4)">
+                <div class="row row--between">
+                    <span class="row" style="font-weight: 600">
+                        <svg class="icon" style="color: var(--accent)">
+                            <use href="#i-cpu"></use>
+                        </svg>
+                        <span data-i18n="setup.ollama">Ollama (сводки)</span>
+                    </span>
+                    <span id="setup-ollama-badge" class="badge">…</span>
+                </div>
+                <p id="setup-ollama-hint" class="card__hint"></p>
+                <div class="row" style="margin-top: var(--sp-3)">
+                    <input type="text" id="setup-ollama-model" class="input" list="models-datalist-fed"
+                        placeholder="gemma3:4b" data-i18n-ph="models.namePh">
+                    <datalist id="models-datalist-fed"></datalist>
+                    <button type="button" onclick="pullLlmModel()" id="setup-ollama-pull"
+                        class="btn btn--primary btn--sm">
+                        <svg class="icon">
+                            <use href="#i-download"></use>
+                        </svg>
+                        <span data-i18n="setup.pullLlm">Скачать LLM</span>
+                    </button>
+                    <button type="button" onclick="startOllamaFromSetup()" id="setup-ollama-start"
+                        class="btn btn--ghost btn--sm">
+                        <svg class="icon">
+                            <use href="#i-play"></use>
+                        </svg>
+                        <span data-i18n="setup.startOllama">Запустить Ollama</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal__foot">
+                <button type="button" onclick="refreshSetup()" class="btn btn--ghost btn--sm" data-i18n="setup.check">
+                    Проверить снова</button>
+                <button type="button" onclick="closeSetupWizard()" class="btn btn--primary btn--sm"
+                    data-i18n="setup.done">Готово</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Без внешних CDN: приложение работает офлайн. Предпросмотр — нативный плеер. -->
+    <script src="/assets/script.js"></script>
+    <script src="/assets/presets.js"></script>
+    <script src="/assets/setup.js"></script>
+    <script src="/assets/models.js"></script>
+    <script src="/assets/queue.js"></script>
+</body>
+
+</html>

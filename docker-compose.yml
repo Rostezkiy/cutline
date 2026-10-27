@@ -1,0 +1,40 @@
+services:
+  cutline:
+    build: .
+    container_name: cutline
+    ports:
+      - "5000:5000"
+    environment:
+      # Ollama живёт в отдельном контейнере
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_AUTO_PULL: "1"
+      LLM_MODEL: ${LLM_MODEL:-gemma3}
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-small}
+      # Доступ по сети: задайте токен, чтобы не открывать сервис всем
+      ACCESS_TOKEN: ${ACCESS_TOKEN:-}
+      MAX_CONCURRENT_JOBS: "1"
+    volumes:
+      # Модели, результаты и логи сохраняются между перезапусками
+      - cutline_data:/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cutline-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    # Для GPU раскомментируйте (нужен nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  cutline_data:
+  ollama_data:

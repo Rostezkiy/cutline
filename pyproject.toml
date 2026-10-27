@@ -1,0 +1,15 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [".venv", ".venv-build", "build", "dist", "models", "processed", "uploads", "temp_chunks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E501",  # длину строк контролирует форматер/ревью
+    "E402",  # импорты после конфигурации нужны из-за порядка инициализации app.py
+    "E741",  # однобуквенные имена (l, i) допустимы в циклах
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]
