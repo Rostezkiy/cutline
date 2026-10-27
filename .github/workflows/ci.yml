@@ -34,39 +34,70 @@ jobs:
         run: |
           for file in templates/*.js; do node --check "$file"; done
 
+      - name: Проверка скриптов запуска
+        run: bash -n start.sh
+
   build:
-    name: Сборка exe (Windows, только теги)
+    name: Сборка релиза (Windows, только теги)
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     needs: tests
     permissions:
       contents: write
+    env:
+      CUTLINE_VERSION: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
 
-      - name: Зависимости
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Зависимости сервера
         run: |
           python -m pip install --upgrade pip
           pip install -r req.txt pyinstaller
 
-      - name: PyInstaller
+      - name: PyInstaller (сервер -> dist/Cutline)
         run: pyinstaller --noconfirm --clean packaging/cutline.spec
 
-      - name: Упаковка в zip
-        run: Compress-Archive -Path dist/Cutline -DestinationPath "Cutline-portable-${{ github.ref_name }}-win64.zip" -Force
+      - name: Tauri (desktop-оболочка -> cutline-desktop.exe)
+        working-directory: tauri/src-tauri
+        run: |
+          python -c "import json, os; cfg = json.load(open('tauri.conf.json', encoding='utf-8')); cfg['version'] = os.environ['CUTLINE_VERSION'].lstrip('v'); json.dump(cfg, open('tauri.version.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2)"
+          npx --yes @tauri-apps/cli@2 build --no-bundle --config tauri.version.json
+          Copy-Item "target/release/cutline-desktop.exe" "../../dist/Cutline/Cutline Desktop.exe"
 
-      - name: Публикация артефакта
+      - name: Portable ZIP (сервер + оболочка)
+        run: python packaging/make_portable.py
+
+      - name: Inno Setup (полный установщик)
+        run: |
+          $ver = $env:CUTLINE_VERSION.TrimStart('v')
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=$ver" packaging/cutline.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup завершился с кодом $LASTEXITCODE" }
+          Move-Item -Force dist/Cutline-Setup.exe "dist/Cutline-Setup-$ver.exe"
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Публикация артефактов
         uses: actions/upload-artifact@v4
         with:
           name: Cutline-windows
-          path: dist/Cutline
+          path: |
+            dist/*.zip
+            dist/Cutline-Setup-*.exe
 
       - name: Публикация в GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: Cutline-portable-*-win64.zip
+          files: |
+            dist/Cutline-portable-*-win64.zip
+            dist/Cutline-Setup-*.exe
           generate_release_notes: true

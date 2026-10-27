@@ -4,7 +4,10 @@
 ;  Требует готовый dist\Cutline (см. build_windows.bat)
 ; ============================================================
 #define AppName "Cutline"
-#define AppVersion "1.0.0"
+; Версию можно переопределить из CI: iscc /DAppVersion=1.2.3 packaging\cutline.iss
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
 #define AppPublisher "Cutline"
 #define AppExeName "Cutline.exe"
 #define ShellExeName "Cutline Desktop.exe"

@@ -20,7 +20,7 @@ import time
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 DIST = os.path.join(ROOT, 'dist', 'Cutline')
-VERSION = '1.0.0'
+VERSION = (os.environ.get('CUTLINE_VERSION') or '1.0.0').lstrip('v')
 
 LAUNCHER_NAME = 'Cutline Portable.cmd'
 LAUNCHER = r'''@echo off

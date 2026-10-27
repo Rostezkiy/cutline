@@ -18,7 +18,7 @@
 
 ### Windows — установщик (рекомендуется)
 
-1. Скачайте `Cutline-Setup.exe` со страницы [Releases](../../releases) и запустите.
+1. Скачайте `Cutline-Setup-*.exe` со страницы [Releases](../../releases) и запустите.
 2. Запустите **Cutline**. При первом старте откроется мастер настройки.
 3. Нажмите «Скачать» у FFmpeg, модели распознавания речи и LLM — всё скачается само.
 
@@ -26,8 +26,9 @@
 
 ### Windows — portable
 
-Распакуйте `Cutline-portable-*.zip` и запустите `Cutline.exe`. Настройки и модели будут лежать рядом
-с программой, в папке `data`.
+Распакуйте `Cutline-portable-*-win64.zip` и запустите `Cutline Portable.cmd` (или `Cutline.exe` для работы
+в браузере). Настройки и модели будут лежать рядом с программой, в папке `data`. Внутри архива есть
+и настольная оболочка `Cutline Desktop.exe`.
 
 ### Docker (Linux / NAS)
 
@@ -45,14 +46,22 @@ docker compose up -d
 
 ## Запуск из исходников
 
+Самый быстрый способ — скрипт запуска: он сам создаёт `.venv`, ставит зависимости и поднимает сервер.
+Нужен только Python 3.10+ и ffmpeg в `PATH`.
+
+```bash
+start.bat      # Windows
+./start.sh     # Linux / macOS
+```
+
+Приложение откроется на <http://127.0.0.1:5000>. Вручную то же самое:
+
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r req.txt
 python run.py
 ```
-
-Приложение откроется на <http://127.0.0.1:5000>.
 
 Полезные переменные окружения: `PORT`, `CUTLINE_DATA_DIR`, `WHISPER_MODEL_SIZE`, `LLM_MODEL`,
 `OLLAMA_URL`, `ACCESS_TOKEN`, `MAX_CONCURRENT_JOBS`.
@@ -69,7 +78,12 @@ python -m unittest discover -s tests -v
 packaging\build_windows.bat      # PyInstaller onedir  -> dist\Cutline\Cutline.exe
 packaging\build_tauri.bat        # оболочка Tauri      -> dist\Cutline-Desktop-Setup-*.exe
 packaging\make_portable.py       # portable ZIP        -> dist\Cutline-portable-*.zip
+iscc packaging\cutline.iss       # полный установщик   -> dist\Cutline-Setup.exe
 ```
+
+Релиз собирается автоматически на тег `v*`: в GitHub Releases попадают переносимый архив
+`Cutline-portable-<версия>-win64.zip` (сервер + настольная оболочка) и установщик
+`Cutline-Setup-<версия>.exe`.
 
 ## Лицензия
 
